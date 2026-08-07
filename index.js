@@ -24,12 +24,18 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
 
+    // Comandă de test simplă pentru a verifica dacă botul citește mesajele
+    if (message.content === '!test') {
+        return message.reply('✅ Botul este online și citește mesajele corect!');
+    }
+
     const prefix = '!';
     if (!message.content.startsWith(prefix)) return;
 
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
+    // Verificăm permisiunile (Administrator sau ManageRoles)
     const hasPermission = message.member.permissions.has('Administrator') || message.member.permissions.has('ManageRoles');
 
     // 1. COMANDA: !factionwarn
@@ -48,7 +54,7 @@ client.on('messageCreate', async (message) => {
             new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('descriere').setLabel('Descriere detaliată a situației').setStyle(TextInputStyle.Paragraph).setRequired(true))
         );
 
-        await message.showModal(modal);
+        return await message.showModal(modal);
     }
 
     // 2. COMANDA: !amenda
@@ -67,7 +73,7 @@ client.on('messageCreate', async (message) => {
             new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('suma').setLabel('Suma amenzii').setStyle(TextInputStyle.Short).setRequired(true))
         );
 
-        await message.showModal(modal);
+        return await message.showModal(modal);
     }
 
     // 3. COMANDA: !bklider
@@ -86,7 +92,7 @@ client.on('messageCreate', async (message) => {
             new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('motiv').setLabel('Motivul blacklist-ului').setStyle(TextInputStyle.Short).setRequired(true))
         );
 
-        await message.showModal(modal);
+        return await message.showModal(modal);
     }
 
     // 4. COMANDA: !bkorganizatie
@@ -105,11 +111,11 @@ client.on('messageCreate', async (message) => {
             new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('descriere').setLabel('Descriere detaliată').setStyle(TextInputStyle.Paragraph).setRequired(true))
         );
 
-        await message.showModal(modal);
+        return await message.showModal(modal);
     }
 });
 
-// Când utilizatorul trimite formularul, embed-ul va apărea direct în canalul unde s-a dat comanda
+// Când utilizatorul trimite formularul, embed-ul se trimite în canalul unde s-a dat comanda
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isModalSubmit()) return;
 
@@ -165,9 +171,8 @@ client.on('interactionCreate', async (interaction) => {
             );
     }
 
-    // Trimite embed-ul direct în canalul unde s-a executat interacțiunea
     await interaction.channel.send({ embeds: [embed] });
-    await interaction.reply({ content: '✅ Formularul a fost trimis cu succes!', ephemeral: true });
+    await interaction.reply({ content: '✅ Formularul a fost trimis și înregistrat cu succes!', ephemeral: true });
 });
 
 client.login(process.env.TOKEN);
