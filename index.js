@@ -17,8 +17,6 @@ const client = new Client({
     ]
 });
 
-const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID;
-
 client.once('ready', () => {
     console.log(`Botul de Sancțiuni și Faction Warn este online ca ${client.user.tag}!`);
 });
@@ -32,7 +30,6 @@ client.on('messageCreate', async (message) => {
     const args = message.content.slice(prefix.length).trim().split(/ +/);
     const command = args.shift().toLowerCase();
 
-    // Verificăm permisiunile generale pentru comenzi de conducere
     const hasPermission = message.member.permissions.has('Administrator') || message.member.permissions.has('ManageRoles');
 
     // 1. COMANDA: !factionwarn
@@ -112,14 +109,9 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-// Când utilizatorul trimite oricare dintre formulare
+// Când utilizatorul trimite formularul, embed-ul va apărea direct în canalul unde s-a dat comanda
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isModalSubmit()) return;
-
-    const logChannel = interaction.guild.channels.cache.get(LOG_CHANNEL_ID);
-    if (!logChannel) {
-        return interaction.reply({ content: '❌ Erore: Canalul de log-uri nu a fost găsit!', ephemeral: true });
-    }
 
     const aprobatDe = interaction.user.tag;
     let embed = new EmbedBuilder().setTimestamp();
@@ -173,9 +165,9 @@ client.on('interactionCreate', async (interaction) => {
             );
     }
 
-    await logChannel.send({ embeds: [embed] });
-    await interaction.reply({ content: '✅ Formularul a fost trimis și înregistrat cu succes în canalul de log-uri!', ephemeral: true });
+    // Trimite embed-ul direct în canalul unde s-a executat interacțiunea
+    await interaction.channel.send({ embeds: [embed] });
+    await interaction.reply({ content: '✅ Formularul a fost trimis cu succes!', ephemeral: true });
 });
 
 client.login(process.env.TOKEN);
-      
