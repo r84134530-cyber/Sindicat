@@ -20,6 +20,9 @@ const client = new Client({
     ]
 });
 
+// Canalul exact unde este permisă comanda !panica
+const PANICA_CHANNEL_ID = '1507100495729131637';
+
 // Înregistrăm comenzile Slash pe Discord la pornire
 const commands = [
     new SlashCommandBuilder().setName('factionwarn').setDescription('Deschide formularul pentru Faction Warn'),
@@ -45,12 +48,45 @@ client.once('ready', async () => {
     }
 });
 
-// Când utilizatorul tastează o comandă cu /
+client.on('messageCreate', async (message) => {
+    if (message.author.bot || !message.guild) return;
+
+    const prefix = '!';
+    if (!message.content.startsWith(prefix)) return;
+
+    const args = message.content.slice(prefix.length).trim().split(/ +/);
+    const command = args.shift().toLowerCase();
+
+    // ================= COMANDA !panica =================
+    if (command === 'panica') {
+        // Verificăm dacă mesajul a fost scris exact pe canalul permis
+        if (message.channel.id !== PANICA_CHANNEL_ID) return;
+
+        const locatie = args.join(' ') || 'Locație nespecificată';
+        const roleId = '1525094439138099313'; // ID-ul gradului care primește ping
+
+        // Ștergem mesajul original pentru discreție
+        await message.delete().catch(() => {});
+
+        const panicaEmbed = new EmbedBuilder()
+            .setTitle('🚨 BUTON DE PANICĂ ACTIVAT 🚨')
+            .setColor('#ff0000')
+            .setDescription(`⚠️ **${message.author.username}** a apăsat **Butonul de Panică**!\n\n📍 **Locație specificată:** *${locatie}*`)
+            .setFooter({ text: 'Intervenție urgentă necesară!' })
+            .setTimestamp();
+
+        return await message.channel.send({
+            content: `<@&${roleId}>`,
+            embeds: [panicaEmbed]
+        });
+    }
+});
+
+// Când utilizatorul tastează o comandă cu / (Necesită permisiuni de Administrator / ManageRoles)
 client.on('interactionCreate', async (interaction) => {
     if (interaction.isChatInputCommand()) {
         const { commandName } = interaction;
 
-        // Verificăm permisiunile
         const hasPermission = interaction.member.permissions.has('Administrator') || interaction.member.permissions.has('ManageRoles');
         if (!hasPermission) {
             return interaction.reply({ content: '❌ Nu ai permisiunea de a folosi această comandă!', ephemeral: true });
@@ -105,7 +141,6 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 
-    // Când utilizatorul trimite formularul completat
     if (interaction.isModalSubmit()) {
         const aprobatDe = interaction.user.tag;
         let embed = new EmbedBuilder().setTimestamp();
@@ -165,3 +200,4 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.login(process.env.TOKEN);
+                                                                                                                                              
